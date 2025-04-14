@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WordFlow</title>
+    <title>Aira Dictation | Kartikeya</title>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js"></script>
     <script>
       pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -18,6 +18,10 @@
       crossorigin="anonymous"
     ></script>
     <style>
+      *::selection {
+        background-color: #5048e5;
+        color: #fff;
+      }
       #progressBar {
         background-color: #5048e5;
       }
@@ -75,7 +79,7 @@
       .control_button {
         background-color: #5b5b5b99;
         border-radius: 7px;
-        color: #ffffff9c;
+        transition: 0.3s;
       }
       .control_button:hover {
         background-color: #5048e5;
@@ -83,6 +87,16 @@
       footer {
         color: #ffffff84;
         margin-top: 90px;
+      }
+      .word {
+        cursor: pointer; /* Make the word appear clickable */
+        display: inline-block; /* Ensure the word is on the same line */
+        margin-right: 2px; /* Optional: Add spacing between words */
+        color: #ffffff; /* Optional: Adjust text color */
+      }
+
+      .word:hover {
+        color: #5048e5; /* Optional: Highlight words on hover */
       }
     </style>
   </head>
@@ -142,18 +156,21 @@
       <div
         id="textPreview"
         class="p-4 overflow-y-auto rounded-lg border border-gray-700 preview_section text-sm text-gray-300"
+        onclick="handlePreviewClick(event)"
       ></div>
     </div>
 
     <!-- Controls -->
-    <div class="flex flex-wrap justify-center gap-4 mt-8">
+    <div class="grid grid-cols-2 gap-4 justify-center mt-8">
       <button
         onclick="startDictation()"
         class="control_button px-4 py-2 text-white"
+        id="startBtn"
       >
         Start
       </button>
       <button
+        id="pauseBtn"
         onclick="pauseDictation()"
         class="control_button px-4 py-2 text-white"
       >
@@ -161,18 +178,19 @@
       </button>
       <button
         onclick="stopDictation()"
+        id="stopBtn"
         class="control_button px-4 py-2 text-white"
       >
         Stop
       </button>
       <button
         onclick="repeatWord()"
+        id="repeatBtn"
         class="control_button px-4 py-2 text-white"
       >
         Repeat
       </button>
     </div>
-
     <!-- Current Word -->
     <div class="mt-6 text-center">
       <div class="text-sm text-gray-400">Speaking:</div>
@@ -224,115 +242,5 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-
-      // Check for system theme preference
-      const prefersDarkScheme = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-
-      // Set the class on <html> based on the system theme
-      document.documentElement.classList.add(
-        prefersDarkScheme ? "bg-black" : "bg-white",
-        prefersDarkScheme ? "text-white" : "text-black"
-      );
-
-      const dropArea = document.querySelector(".glass");
-      const fileInput = document.getElementById("fileInput");
-
-      // Prevent default behaviors
-      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-        dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
-        dropArea.addEventListener(eventName, (e) => e.stopPropagation(), false);
-      });
-
-      // Highlight drop area on drag
-      ["dragenter", "dragover"].forEach((eventName) => {
-        dropArea.addEventListener(
-          eventName,
-          () => {
-            dropArea.classList.add("ring", "ring-purple-500");
-          },
-          false
-        );
-      });
-
-      ["dragleave", "drop"].forEach((eventName) => {
-        dropArea.addEventListener(
-          eventName,
-          () => {
-            dropArea.classList.remove("ring", "ring-purple-500");
-          },
-          false
-        );
-      });
-
-      // Handle dropped files
-      dropArea.addEventListener("drop", (e) => {
-        const files = e.dataTransfer.files;
-        if (files.length) {
-          fileInput.files = files;
-
-          // Optional: Trigger the change event
-          const event = new Event("change", { bubbles: true });
-          fileInput.dispatchEvent(event);
-        }
-      });
-
-      const textPreview = document.getElementById("textPreview");
-      const progressBar = document.getElementById("progressBar");
-      const progressText = document.getElementById("progressText");
-      const progressContainer = document.getElementById("progressContainer");
-
-      fileInput.addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) return;
-
-        // Reset + Show Progress UI
-        progressContainer.classList.remove("hidden");
-        progressBar.style.width = "0%";
-        progressText.textContent = "Extracting...";
-
-        if (file.type === "application/pdf") {
-          const reader = new FileReader();
-          reader.onload = function () {
-            const typedarray = new Uint8Array(this.result);
-            pdfjsLib.getDocument(typedarray).promise.then(async function (pdf) {
-              let fullText = "";
-              for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const content = await page.getTextContent();
-                const text = content.items.map((item) => item.str).join(" ");
-                fullText += text + "\n\n";
-
-                // Update progress
-                const percent = Math.round((i / pdf.numPages) * 100);
-                progressBar.style.width = percent + "%";
-                progressText.textContent = `Page ${i}/${pdf.numPages}`;
-              }
-
-              // Trim the extracted text
-              const trimmedText = fullText.trim();
-              textPreview.textContent = trimmedText || "No text found.";
-              progressBar.style.width = "100%";
-              progressText.textContent = trimmedText ? "100%" : "No text found";
-            });
-          };
-          reader.readAsArrayBuffer(file);
-        } else if (file.type === "text/plain") {
-          const reader = new FileReader();
-          reader.onload = function () {
-            textPreview.textContent = this.result;
-            progressBar.style.width = "100%";
-            progressText.textContent = "Done";
-          };
-          reader.readAsText(file);
-        } else {
-          alert("Unsupported file type.");
-          progressContainer.classList.add("hidden");
-        }
-      });
-    </script>
   </body>
 </html>
