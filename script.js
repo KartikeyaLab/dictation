@@ -1,13 +1,11 @@
-// script.js - Full Corrected Code
-
 let words = [];
 let currentIndex = 0;
 let speaking = false;
 let paused = false;
 let synth = window.speechSynthesis;
 let selectedVoice = null;
-let wordGap = 800; // Initial gap between words (in ms)
-let speechRate = 1; // Initial speech rate
+let wordGap = 800;
+let speechRate = 1;
 
 const fileInput = document.getElementById("fileInput");
 const textPreview = document.getElementById("textPreview");
@@ -90,9 +88,9 @@ function handleExtractedText(text) {
       const span = document.createElement("span");
       span.textContent = word + " ";
       span.classList.add("word");
-      span.dataset.index = index; // Store the correct index here
+      span.dataset.index = index;
       span.addEventListener("click", () => {
-        currentIndex = parseInt(span.dataset.index); // Use the stored index
+        currentIndex = parseInt(span.dataset.index);
         startDictation();
       });
       textPreview.appendChild(span);
@@ -235,7 +233,7 @@ function updateWordGap() {
 function updateButtonStates() {
   startBtn.innerText = speaking && !paused ? "Started" : "Start";
   pauseBtn.innerText = paused ? "Paused" : "Pause";
-  stopBtn.innerText = "Stop";
+  stopBtn.innerText = "Cancel";
   repeatBtn.innerText = "Repeat";
 }
 

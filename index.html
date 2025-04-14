@@ -1,3 +1,6 @@
+<!-- Stuff I cooked - Kartikeya 
+Sunday 14 April  -->
+
 <!DOCTYPE html>
 <html lang="en" class="bg-black text-white">
   <head>
@@ -13,6 +16,7 @@
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <script
       src="https://kit.fontawesome.com/542131e2b7.js"
       crossorigin="anonymous"
@@ -89,21 +93,20 @@
         margin-top: 90px;
       }
       .word {
-        cursor: pointer; /* Make the word appear clickable */
-        display: inline-block; /* Ensure the word is on the same line */
-        margin-right: 2px; /* Optional: Add spacing between words */
-        color: #ffffff; /* Optional: Adjust text color */
+        cursor: pointer;
+        display: inline-block;
+        margin-right: 2px;
+        color: #ffffff;
       }
 
       .word:hover {
-        color: #5048e5; /* Optional: Highlight words on hover */
+        color: #5048e5;
       }
     </style>
   </head>
   <body
     class="flex flex-col items-center justify-center min-h-screen px-4 py-10"
   >
-    <!-- Heading -->
     <header class="text-center mb-12">
       <h1 class="text-4xl font-bold mb-2">Aira Dictation</h1>
       <p class="text-gray-400 text-sm">Professional Text-to-Speech Dictation</p>
@@ -143,9 +146,7 @@
             Select file
           </label>
           <input id="fileInput" type="file" class="hidden" />
-          <p class="text-gray-500 text-xs mt-2">
-            Supported formats: PDF, DOCX, TXT
-          </p>
+          <p class="text-gray-500 text-xs mt-2">Supported formats: PDF, TXT</p>
         </div>
       </div>
     </div>
@@ -181,7 +182,7 @@
         id="stopBtn"
         class="control_button px-4 py-2 text-white"
       >
-        Cancel
+        Stop
       </button>
       <button
         onclick="repeatWord()"
