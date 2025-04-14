@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-black text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WordFlow</title>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js";
+    </script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://kit.fontawesome.com/542131e2b7.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      #progressBar {
+        background-color: #5048e5;
+      }
+      .glass {
+        backdrop-filter: blur(12px);
+        background-color: rgba(30, 30, 30, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .glass_inside {
+        backdrop-filter: blur(12px);
+        background-color: rgba(30, 30, 30, 0.6);
+        border: 3px dotted rgba(255, 255, 255, 0.08);
+      }
+      .Upload_botton {
+        font-size: 30px;
+        color: #5048e5;
+      }
+      h1 {
+        color: #5048e5;
+      }
+      .select_button {
+        border: 1px solid rgba(255, 255, 255, 0.207);
+      }
+      .circle {
+        border-radius: 100%;
+        background-color: #5048e53d;
+        width: 100px;
+        height: 60px;
+
+        align-items: center;
+        justify-content: center;
+        display: flex;
+      }
+      .file_icon {
+        font-size: 15px;
+        margin-right: 5px;
+      }
+      .preview_section {
+        backdrop-filter: blur(12px);
+        background-color: rgba(30, 30, 30, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        height: 300px;
+        overflow-x: hidden;
+      }
+      #textPreview::-webkit-scrollbar {
+        width: 5px;
+      }
+      #textPreview::-webkit-scrollbar-thumb {
+        background-color: #ffffff;
+        border-radius: 2px;
+      }
+      #textPreview::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .control_button {
+        background-color: #5b5b5b99;
+        border-radius: 7px;
+        color: #ffffff9c;
+      }
+      .control_button:hover {
+        background-color: #5048e5;
+      }
+      footer {
+        color: #ffffff84;
+        margin-top: 90px;
+      }
+    </style>
+  </head>
+  <body
+    class="flex flex-col items-center justify-center min-h-screen px-4 py-10"
+  >
+    <!-- Heading -->
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-2">Aira Dictation</h1>
+      <p class="text-gray-400 text-sm">Professional Text-to-Speech Dictation</p>
+    </header>
+
+    <!-- Upload Card -->
+    <div
+      class="glass rounded-2xl p-8 w-full max-w-md text-center shadow-lg transition hover:shadow-purple-700/40"
+    >
+      <div
+        class="glass_inside rounded-2xl p-8 w-full max-w-md text-center shadow-lg transition hover:shadow-purple-700/40"
+      >
+        <!-- Progress Bar -->
+        <div id="progressContainer" class="w-full mt-4 hidden">
+          <div class="w-full bg-gray-800 rounded h-2">
+            <div id="progressBar" class="h-2 rounded" style="width: 0%"></div>
+          </div>
+          <p id="progressText" class="text-xs text-gray-400 mt-1 text-right">
+            0%
+          </p>
+        </div>
+        <div class="flex flex-col items-center space-y-4">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center">
+            <div class="circle">
+              <i class="fa-solid fa-arrow-up-from-bracket Upload_botton"></i>
+            </div>
+          </div>
+          <p class="text-white font-medium text-lg">Upload your document</p>
+          <p class="text-gray-400 text-sm">Drag & drop or click to browse</p>
+
+          <!-- File Input -->
+          <label
+            for="fileInput"
+            class="cursor-pointer select_button bg-black hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg transition"
+          >
+            <i class="fa-regular fa-file file_icon"></i>
+            Select file
+          </label>
+          <input id="fileInput" type="file" class="hidden" />
+          <p class="text-gray-500 text-xs mt-2">
+            Supported formats: PDF, DOCX, TXT
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="w-full max-w-3xl mt-12">
+      <h2 class="text-xl font-semibold text-white mb-2">Preview</h2>
+      <div
+        id="textPreview"
+        class="p-4 overflow-y-auto rounded-lg border border-gray-700 preview_section text-sm text-gray-300"
+      ></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap justify-center gap-4 mt-8">
+      <button
+        onclick="startDictation()"
+        class="control_button px-4 py-2 text-white"
+      >
+        Start
+      </button>
+      <button
+        onclick="pauseDictation()"
+        class="control_button px-4 py-2 text-white"
+      >
+        Pause
+      </button>
+      <button
+        onclick="stopDictation()"
+        class="control_button px-4 py-2 text-white"
+      >
+        Stop
+      </button>
+      <button
+        onclick="repeatWord()"
+        class="control_button px-4 py-2 text-white"
+      >
+        Repeat
+      </button>
+    </div>
+
+    <!-- Current Word -->
+    <div class="mt-6 text-center">
+      <div class="text-sm text-gray-400">Speaking:</div>
+      <div
+        id="currentWord"
+        class="text-2xl text-yellow-400 font-bold mt-1"
+      ></div>
+    </div>
+
+    <!-- Sliders -->
+    <div class="mt-10 w-full max-w-xl space-y-6">
+      <div>
+        <label for="speechRate" class="block mb-2 text-sm text-gray-300"
+          >Speech Rate</label
+        >
+        <input
+          type="range"
+          id="speechRate"
+          min="0.5"
+          max="2"
+          step="0.1"
+          value="1"
+          oninput="updateSpeechRate()"
+          class="w-full"
+        />
+        <p id="rateValue" class="mt-1 text-sm text-gray-400">Rate: 1</p>
+      </div>
+
+      <div>
+        <label for="wordGap" class="block mb-2 text-sm text-gray-300"
+          >Gap Between Words (seconds)</label
+        >
+        <input
+          type="range"
+          id="wordGap"
+          min="0.2"
+          max="3"
+          step="0.1"
+          value="0.8"
+          oninput="updateWordGap()"
+          class="w-full"
+        />
+        <p id="gapValue" class="mt-1 text-sm text-gray-400">Gap: 0.8s</p>
+      </div>
+    </div>
+
+    <footer class="text-center py-6 text-zinc-600 text-sm">
+      © <span id="year"></span> Aira Dictation. All rights reserved.
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Check for system theme preference
+      const prefersDarkScheme = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+
+      // Set the class on <html> based on the system theme
+      document.documentElement.classList.add(
+        prefersDarkScheme ? "bg-black" : "bg-white",
+        prefersDarkScheme ? "text-white" : "text-black"
+      );
+
+      const dropArea = document.querySelector(".glass");
+      const fileInput = document.getElementById("fileInput");
+
+      // Prevent default behaviors
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(eventName, (e) => e.preventDefault(), false);
+        dropArea.addEventListener(eventName, (e) => e.stopPropagation(), false);
+      });
+
+      // Highlight drop area on drag
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropArea.addEventListener(
+          eventName,
+          () => {
+            dropArea.classList.add("ring", "ring-purple-500");
+          },
+          false
+        );
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(
+          eventName,
+          () => {
+            dropArea.classList.remove("ring", "ring-purple-500");
+          },
+          false
+        );
+      });
+
+      // Handle dropped files
+      dropArea.addEventListener("drop", (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length) {
+          fileInput.files = files;
+
+          // Optional: Trigger the change event
+          const event = new Event("change", { bubbles: true });
+          fileInput.dispatchEvent(event);
+        }
+      });
+
+      const textPreview = document.getElementById("textPreview");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const progressContainer = document.getElementById("progressContainer");
+
+      fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Reset + Show Progress UI
+        progressContainer.classList.remove("hidden");
+        progressBar.style.width = "0%";
+        progressText.textContent = "Extracting...";
+
+        if (file.type === "application/pdf") {
+          const reader = new FileReader();
+          reader.onload = function () {
+            const typedarray = new Uint8Array(this.result);
+            pdfjsLib.getDocument(typedarray).promise.then(async function (pdf) {
+              let fullText = "";
+              for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const text = content.items.map((item) => item.str).join(" ");
+                fullText += text + "\n\n";
+
+                // Update progress
+                const percent = Math.round((i / pdf.numPages) * 100);
+                progressBar.style.width = percent + "%";
+                progressText.textContent = `Page ${i}/${pdf.numPages}`;
+              }
+
+              // Trim the extracted text
+              const trimmedText = fullText.trim();
+              textPreview.textContent = trimmedText || "No text found.";
+              progressBar.style.width = "100%";
+              progressText.textContent = trimmedText ? "100%" : "No text found";
+            });
+          };
+          reader.readAsArrayBuffer(file);
+        } else if (file.type === "text/plain") {
+          const reader = new FileReader();
+          reader.onload = function () {
+            textPreview.textContent = this.result;
+            progressBar.style.width = "100%";
+            progressText.textContent = "Done";
+          };
+          reader.readAsText(file);
+        } else {
+          alert("Unsupported file type.");
+          progressContainer.classList.add("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>
